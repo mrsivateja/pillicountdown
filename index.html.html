@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Advnc Happie B'day Pilli</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            min-height: 100vh;
+            min-width: 100vw;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            width: 100vw;
+            height: 100vh;
+            min-height: 100vh;
+            min-width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Pacifico', cursive;
+            overflow: hidden;
+        }
+        .container {
+            background: rgba(255,255,255,0.8);
+            border-radius: 2.5vw;
+            box-shadow: 0 0.8vw 3.2vw rgba(0,0,0,0.2);
+            padding: 4vw 6vw;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            max-width: 90vw;
+            max-height: 90vh;
+        }
+        h1 {
+            font-size: 4vw;
+            color: #ff6f91;
+            margin-bottom: 2vw;
+            letter-spacing: 0.2vw;
+            animation: popIn 1s cubic-bezier(.68,-0.55,.27,1.55);
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 3vw;
+            margin-bottom: 2vw;
+            flex-wrap: wrap;
+        }
+        .time-box {
+            background: linear-gradient(135deg, #fcb69f 0%, #ff6f91 100%);
+            border-radius: 1.6vw;
+            padding: 2vw 1.5vw;
+            min-width: 7vw;
+            color: #fff;
+            font-size: 2.5vw;
+            box-shadow: 0 0.4vw 1.6vw rgba(255,111,145,0.15);
+            transition: transform 0.2s;
+            animation: bounce 1.5s infinite alternate;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .time-label {
+            display: block;
+            font-size: 1.2vw;
+            margin-top: 0.8vw;
+            color: #fffbe7;
+            letter-spacing: 0.1vw;
+        }
+        @keyframes bounce {
+            0% { transform: translateY(0);}
+            100% { transform: translateY(-1vw);}
+        }
+        .wish {
+            font-size: 2.5vw;
+            color: #ff6f91;
+            margin-top: 2vw;
+            opacity: 0;
+            animation: fadeIn 2s forwards;
+            animation-delay: 0.5s;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        .confetti {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        #hearts-bg {
+            position: fixed;
+            left: 0; top: 0; width: 100vw; height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .floating-heart {
+            position: absolute;
+            opacity: 0.7;
+            animation: floatHeart linear infinite;
+            will-change: transform;
+        }
+        @keyframes floatHeart {
+            0% {
+                transform: translateY(100vh) scale(var(--scale));
+                opacity: 0.7;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-10vh) scale(var(--scale));
+                opacity: 0.7;
+            }
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 6vw 2vw;
+                border-radius: 4vw;
+            }
+            h1 {
+                font-size: 7vw;
+            }
+            .time-box {
+                font-size: 5vw;
+                min-width: 16vw;
+                padding: 4vw 2vw;
+            }
+            .time-label {
+                font-size: 2.5vw;
+            }
+            .wish {
+                font-size: 4vw;
+            }
+            .countdown {
+                gap: 4vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating hearts background -->
+    <div id="hearts-bg"></div>
+    <div class="container">
+        <canvas class="confetti"></canvas>
+        <h1>Countdown to the Best day of the year!</h1>
+        <div class="countdown" id="countdown">
+            <div class="time-box"><span id="days">00</span><span class="time-label">Days</span></div>
+            <div class="time-box"><span id="hours">00</span><span class="time-label">Hours</span></div>
+            <div class="time-box"><span id="minutes">00</span><span class="time-label">Minutes</span></div>
+            <div class="time-box"><span id="seconds">00</span><span class="time-label">Seconds</span></div>
+        </div>
+        <div class="wish" id="wish" style="display:none;">
+            🎉 Happy Birthday, My Love! 🎉
+        </div>
+    </div>
+    <script>
+        // Set your girlfriend's birthday (month is 0-indexed: 0=Jan, 11=Dec)
+        // Set for August 3rd
+        const birthdayMonth = 7; // August (0-indexed)
+        const birthdayDate = 3;  // 3rd
+
+        // Helper to get next birthday in IST
+        function getNextBirthdayIST() {
+            // Always countdown to August 3, 2025, 12:00 AM IST
+            // 12:00 AM IST = 18:30 UTC on previous day
+            const target = new Date(Date.UTC(2025, 7, 2, 18, 30, 0)); // August is 7 (0-indexed)
+            return target;
+        }
+
+        function updateCountdown() {
+            const now = new Date();
+            const nowIST = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+            const target = getNextBirthdayIST();
+            const diff = target - nowIST;
+            if (diff <= 0) {
+                document.getElementById('countdown').style.display = 'none';
+                document.getElementById('wish').style.display = 'block';
+                startConfetti();
+                return;
+            }
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / (1000 * 60)) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+
+            document.getElementById('days').textContent = String(days).padStart(2, '0');
+            document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+            document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+        }
+
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        // Confetti animation
+        function startConfetti() {
+            const canvas = document.querySelector('.confetti');
+            const ctx = canvas.getContext('2d');
+            let W = canvas.width = canvas.offsetWidth = canvas.parentElement.offsetWidth;
+            let H = canvas.height = canvas.offsetHeight = canvas.parentElement.offsetHeight;
+            const confettiCount = 120;
+            const confetti = [];
+            const colors = ['#ff6f91', '#fcb69f', '#ffe156', '#6a89cc', '#ffecd2', '#b8e994'];
+
+            function randomColor() {
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            function Confetto() {
+                this.x = Math.random() * W;
+                this.y = Math.random() * -H;
+                this.r = Math.random() * 6 + 4;
+                this.d = Math.random() * confettiCount;
+                this.color = randomColor();
+                this.tilt = Math.floor(Math.random() * 10) - 10;
+                this.tiltAngleIncremental = (Math.random() * 0.07) + .05;
+                this.tiltAngle = 0;
+
+                this.draw = function() {
+                    ctx.beginPath();
+                    ctx.lineWidth = this.r;
+                    ctx.strokeStyle = this.color;
+                    ctx.moveTo(this.x + this.tilt + (this.r / 3), this.y);
+                    ctx.lineTo(this.x + this.tilt, this.y + this.tilt + this.r);
+                    ctx.stroke();
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, W, H);
+                for (let i = 0; i < confetti.length; i++) {
+                    confetti[i].draw();
+                }
+                update();
+            }
+
+            function update() {
+                for (let i = 0; i < confetti.length; i++) {
+                    confetti[i].y += (Math.cos(confetti[i].d) + 3 + confetti[i].r / 2) / 2;
+                    confetti[i].x += Math.sin(0.01 * confetti[i].d);
+                    confetti[i].tiltAngle += confetti[i].tiltAngleIncremental;
+                    confetti[i].tilt = Math.sin(confetti[i].tiltAngle) * 15;
+
+                    if (confetti[i].y > H) {
+                        confetti[i].x = Math.random() * W;
+                        confetti[i].y = -10;
+                    }
+                }
+            }
+
+            function resizeCanvas() {
+                W = canvas.width = canvas.offsetWidth = canvas.parentElement.offsetWidth;
+                H = canvas.height = canvas.offsetHeight = canvas.parentElement.offsetHeight;
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+
+            for (let i = 0; i < confettiCount; i++) {
+                confetti.push(new Confetto());
+            }
+            function animate() {
+                draw();
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // Floating hearts background (responsive)
+        function createFloatingHearts() {
+            const colors = ['#ff6f91', '#fcb69f', '#ffe156', '#b7eaff', '#b57edc', '#ff8fab'];
+            const heartsBg = document.getElementById('hearts-bg');
+            function clearHearts() {
+                while (heartsBg.firstChild) heartsBg.removeChild(heartsBg.firstChild);
+            }
+            function addHearts() {
+                clearHearts();
+                const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+                const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+                // Heart count scales with area, but capped for performance
+                const heartCount = Math.min(48, Math.max(16, Math.floor((vw * vh) / 25000)));
+                for (let i = 0; i < heartCount; i++) {
+                    const heart = document.createElement('div');
+                    heart.className = 'floating-heart';
+                    // Size scales with viewport, but stays in a nice range
+                    const minSize = Math.max(18, Math.min(32, vw / 40));
+                    const maxSize = Math.max(32, Math.min(72, vw / 15));
+                    const size = Math.random() * (maxSize - minSize) + minSize;
+                    const left = Math.random() * 100; // vw
+                    const duration = Math.random() * 8 + 8; // 8s to 16s
+                    const delay = Math.random() * 8; // 0s to 8s
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    heart.style.left = `${left}vw`;
+                    heart.style.width = `${size}px`;
+                    heart.style.height = `${size}px`;
+                    heart.style.setProperty('--scale', (size/40).toFixed(2));
+                    heart.style.animationDuration = `${duration}s`;
+                    heart.style.animationDelay = `${delay}s`;
+
+                    // SVG heart
+                    heart.innerHTML = `
+                        <svg viewBox="0 0 32 29" width="${size}" height="${size}" fill="${color}">
+                            <path d="M23.6,2.6c-2.6,0-4.9,1.6-5.6,4C17,4.2,14.7,2.6,12.1,2.6C8.1,2.6,5,5.7,5,9.7
+                            c0,7.1,10.5,15.7,11,16.1c0.3,0.2,0.7,0.2,1,0c0.4-0.4,11-9,11-16.1C27,5.7,23.9,2.6,23.6,2.6z"/>
+                        </svg>
+                    `;
+                    heartsBg.appendChild(heart);
+                }
+            }
+            addHearts();
+            window.addEventListener('resize', () => {
+                addHearts();
+            });
+        }
+        createFloatingHearts();
+    </script>
+</body>
+</html>
